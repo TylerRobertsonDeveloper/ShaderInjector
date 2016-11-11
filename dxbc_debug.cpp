@@ -2173,7 +2173,7 @@ State State::GetNext(GlobalState &global, State quad[4]) const
       uint32_t numElems = 0;
       bool structured = false;
 
-      byte *data = NULL;
+      char *data = NULL;
 
       if(gsm)
       {
@@ -2223,10 +2223,10 @@ State State::GetNext(GlobalState &global, State quad[4]) const
 
       assert(data);
 
-      // seems like .x is element index, and .y is byte address, in the dstAddress operand
+      // seems like .x is element index, and .y is char address, in the dstAddress operand
       //
       // "Out of bounds addressing on u# causes nothing to be written to memory, except if the
-      //  u# is structured, and byte offset into the struct (second component of the address) is
+      //  u# is structured, and char offset into the struct (second component of the address) is
       //  causing the out of bounds access, then the entire contents of the UAV become undefined."
       //
       // "The number of components taken from the address is determined by the dimensionality of dst
@@ -2422,7 +2422,7 @@ State State::GetNext(GlobalState &global, State quad[4]) const
         numElems *= fmt.byteWidth;
       }
 
-      byte *data = srv ? &global.srvs[resIndex].data[0] : &global.uavs[resIndex].data[0];
+      char *data = srv ? &global.srvs[resIndex].data[0] : &global.uavs[resIndex].data[0];
       bool texData = srv ? false : global.uavs[resIndex].tex;
       uint32_t rowPitch = srv ? 0 : global.uavs[resIndex].rowPitch;
       uint32_t depthPitch = srv ? 0 : global.uavs[resIndex].depthPitch;
@@ -3413,7 +3413,7 @@ State State::GetNext(GlobalState &global, State quad[4]) const
 
           uint32_t resIndex = (uint32_t)decl.operand.indices[0].index;
 
-          byte *data = &global.srvs[resIndex].data[0];
+          char *data = &global.srvs[resIndex].data[0];
           uint32_t offset = global.srvs[resIndex].firstElement;
           uint32_t numElems = global.srvs[resIndex].numElements;
 
@@ -3428,7 +3428,7 @@ State State::GetNext(GlobalState &global, State quad[4]) const
 
             if(srcOpers[0].value.uv[0] < numElems)
             {
-              byte *d = data + srcOpers[0].value.uv[0] * fmt.Stride();
+              char *d = data + srcOpers[0].value.uv[0] * fmt.Stride();
 
               if(fmt.byteWidth == 10)
               {

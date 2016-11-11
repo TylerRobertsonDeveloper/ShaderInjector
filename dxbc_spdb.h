@@ -42,7 +42,7 @@ namespace DXBC
 class PageMapping
 {
 public:
-  PageMapping(const byte **pages, uint32_t PageSize, uint32_t *indices, uint32_t numIndices)
+  PageMapping(const char **pages, uint32_t PageSize, uint32_t *indices, uint32_t numIndices)
   {
     direct = NULL;
 
@@ -58,7 +58,7 @@ public:
     }
   }
 
-  const byte *Data()
+  const char *Data()
   {
     if(direct)
       return direct;
@@ -66,8 +66,8 @@ public:
   }
 
 private:
-  const byte *direct;
-  vector<byte> contiguous;
+  const char *direct;
+  vector<char> contiguous;
 };
 
 struct FileHeaderPage
@@ -178,7 +178,7 @@ struct LineNumbersHeader
 
 struct FileLineNumbers
 {
-  uint32_t fileIdx;    // index = byte offset in hash chunk
+  uint32_t fileIdx;    // index = char offset in hash chunk
   uint32_t numLines;
   uint32_t size;
 };
@@ -194,7 +194,7 @@ struct ProcHeader
   uint32_t DebugEnd;
   uint32_t Type;
   uint32_t Offset;
-  byte Unknown[3];
+  char Unknown[3];
 };
 #pragma pack(pop)
 

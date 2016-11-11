@@ -1,5 +1,6 @@
 #include "dxbc_inspect.h"
 #include "dxbc_disassemble.h"
+#include <windows.h>
 
 #include <cstdio>
 
@@ -40,7 +41,7 @@ int main(int argc, const char **argv)
 	DXBCFile dxbcFile(shaderHex, fileSize);
 
 
-	printf("Disassembly: \n%s\n", disassembly.c_str());
+	//printf("Disassembly: \n%s\n", disassembly.c_str());
 
 	delete[] shaderHex;
 

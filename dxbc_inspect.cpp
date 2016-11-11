@@ -22,16 +22,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  ******************************************************************************/
+#define NOMINMAX
 
 #include "dxbc_inspect.h"
 #include "dxbc_sdbg.h"
 #include "dxbc_spdb.h"
 
+#include <set>
 #include <cassert>
+#include <algorithm>
 
+using namespace std;
 using std::make_pair;
 
-
+static char buffer[1024];
 
 namespace DXBC
 {
@@ -69,7 +73,7 @@ struct RDEFCBufferChildType
 {
   uint32_t nameOffset;
   uint32_t typeOffset;      // offset to a RDEFCBufferType
-  uint32_t memberOffset;    // byte offset in the parent structure - not a file offset
+  uint32_t memberOffset;    // char offset in the parent structure - not a file offset
 };
 
 struct RDEFCBufferType
@@ -194,8 +198,8 @@ struct SIGNElement
   uint32_t componentType;
   uint32_t registerNum;
 
-  byte mask;
-  byte rwMask;
+  char mask;
+  char rwMask;
   uint16_t unused;
 };
 
@@ -441,13 +445,13 @@ CBufferVariableType DXBCFile::ParseRDEFType(RDEFHeader *h, char *chunkContents, 
     // the other dimension
     if(ret.descriptor.varClass == CLASS_MATRIX_COLUMNS)
       ret.descriptor.bytesize = TypeByteSize(ret.descriptor.type) * ret.descriptor.cols * 4 *
-                                RDCMAX(1U, ret.descriptor.elements);
+                                std::max(1U, ret.descriptor.elements);
     else if(ret.descriptor.varClass == CLASS_MATRIX_ROWS)
       ret.descriptor.bytesize = TypeByteSize(ret.descriptor.type) * ret.descriptor.rows * 4 *
-                                RDCMAX(1U, ret.descriptor.elements);
+                                std::max(1U, ret.descriptor.elements);
     else
       ret.descriptor.bytesize = TypeByteSize(ret.descriptor.type) * ret.descriptor.rows *
-                                ret.descriptor.cols * RDCMAX(1U, ret.descriptor.elements);
+                                ret.descriptor.cols * std::max(1U, ret.descriptor.elements);
   }
 
   m_Variables[typeOffset] = ret;
@@ -685,7 +689,7 @@ DXBCFile::DXBCFile(const void *ByteCode, size_t ByteCodeLength)
 
             for(uint32_t a = 0; a < arraySize; a++)
             {
-              desc.name = StringFormat::Fmt("%s[%u]", rname.c_str(), a);
+              desc.name = sprintf( buffer, "%s[%u]", rname.c_str(), a);
               m_Resources.push_back(desc);
               desc.reg++;
             }
@@ -1469,10 +1473,10 @@ string SDBGChunk::GetSymbolName(int32_t symbolOffset, int32_t symbolLength)
   return string(&m_RawData[offset], symbolLength);
 }
 
-uint32_t ReadVarLenUInt(byte *&s)
+uint32_t ReadVarLenUInt(char *&s)
 {
-  // check top two bits. 0b00 (or 0b01) means we just return the byte value.
-  // 0b10 means we take this byte as high-end byte and next as the low-end
+  // check top two bits. 0b00 (or 0b01) means we just return the char value.
+  // 0b10 means we take this char as high-end char and next as the low-end
   // in a word. (with top two bits masked off)
   // 0b11 similar, but for a dword.
 
@@ -1482,19 +1486,19 @@ uint32_t ReadVarLenUInt(byte *&s)
   }
   else if((*s & 0xC0) == 0x80)
   {
-    byte first = *(s++);
+    char first = *(s++);
     first &= 0x7f;
-    byte second = *(s++);
+    char second = *(s++);
 
     return (uint32_t(first) << 8) | uint32_t(second);
   }
   else if((*s & 0xC0) == 0xC0)
   {
-    byte first = *(s++);
+    char first = *(s++);
     first &= 0x3f;
-    byte second = *(s++);
-    byte third = *(s++);
-    byte fourth = *(s++);
+    char second = *(s++);
+    char third = *(s++);
+    char fourth = *(s++);
 
     return (uint32_t(first) << 24) | (uint32_t(second) << 16) | (uint32_t(third) << 8) |
            uint32_t(fourth);
@@ -1512,7 +1516,7 @@ SPDBChunk::SPDBChunk(void *chunk)
 
   uint32_t firstInstructionOffset = 0;
 
-  byte *data = NULL;
+  char *data = NULL;
 
   m_ShaderFlags = 0;
 
@@ -1525,7 +1529,7 @@ SPDBChunk::SPDBChunk(void *chunk)
 
     spdblength = raw[1];
 
-    data = (byte *)&raw[2];
+    data = (char *)&raw[2];
   }
 
   FileHeaderPage *header = (FileHeaderPage *)data;
@@ -1538,7 +1542,7 @@ SPDBChunk::SPDBChunk(void *chunk)
 
   assert(header->PageCount * header->PageSize == spdblength);
 
-  const byte **pages = new const byte *[header->PageCount];
+  const char **pages = new const char *[header->PageCount];
   for(uint32_t i = 0; i < header->PageCount; i++)
     pages[i] = &data[i * header->PageSize];
 
@@ -1547,7 +1551,7 @@ SPDBChunk::SPDBChunk(void *chunk)
 
   PageMapping rootdirIndicesMapping(pages, header->PageSize, header->RootDirectory,
                                     rootDirIndicesCount);
-  const byte *rootdirIndices = rootdirIndicesMapping.Data();
+  const char *rootdirIndices = rootdirIndicesMapping.Data();
 
   PageMapping directoryMapping(pages, header->PageSize, (uint32_t *)rootdirIndices, rootdirCount);
   const uint32_t *dirContents = (const uint32_t *)directoryMapping.Data();
@@ -1642,8 +1646,8 @@ SPDBChunk::SPDBChunk(void *chunk)
     PageMapping fileContents(pages, header->PageSize, &s.pageIndices[0],
                              (uint32_t)s.pageIndices.size());
 
-    byte *bytes = (byte *)fileContents.Data();
-    byte *end = bytes + s.byteLength;
+    char *bytes = (char *)fileContents.Data();
+    char *end = bytes + s.byteLength;
 
     // seems to be accurate, but we'll just iterate to end
     // uint32_t *u32 = (uint32_t *)bytes;
@@ -1693,7 +1697,7 @@ SPDBChunk::SPDBChunk(void *chunk)
 
     contents += 3;
 
-    contents = (uint32_t *)((byte *)contents + StringBytes);
+    contents = (uint32_t *)((char *)contents + StringBytes);
 
     uint32_t numHashes = contents[0];
     contents++;
@@ -1718,8 +1722,8 @@ SPDBChunk::SPDBChunk(void *chunk)
     assert(dbi->sig == 0xffffffff);
     assert(dbi->ver == 19990903);
 
-    byte *cur = (byte *)(dbi + 1);
-    byte *end = cur + dbi->gpmodiSize;
+    char *cur = (char *)(dbi + 1);
+    char *end = cur + dbi->gpmodiSize;
     while(cur < end)
     {
       DBIModule *mod = (DBIModule *)cur;
@@ -1761,8 +1765,8 @@ SPDBChunk::SPDBChunk(void *chunk)
 
     assert(moduledata[0] == 4);
 
-    byte *cur = (byte *)&moduledata[1];
-    byte *end = (byte *)moduledata + modules[m].cbSyms;
+    char *cur = (char *)&moduledata[1];
+    char *end = (char *)moduledata + modules[m].cbSyms;
     while(cur < end)
     {
       uint16_t *sym = (uint16_t *)cur;
@@ -1773,7 +1777,7 @@ SPDBChunk::SPDBChunk(void *chunk)
 
       cur += sizeof(uint16_t) * 2;
 
-      byte *contents = cur;
+      char *contents = cur;
 
       if(type == 0x1110)
       {
@@ -1907,8 +1911,8 @@ SPDBChunk::SPDBChunk(void *chunk)
         func.fileOffs = 0;
         func.baseLineNum = 0;
 
-        byte *iterator = (byte *)contents;
-        byte *callend = contents + len;
+        char *iterator = (char *)contents;
+        char *callend = contents + len;
 
         // uint32_t *adsf = (uint32_t *)iterator;
 
@@ -2009,7 +2013,7 @@ SPDBChunk::SPDBChunk(void *chunk)
           else if(opcode == SetByteOffset)
           {
             currentBytes = ReadVarLenUInt(iterator);
-            // printf("                      type %02x: start at byte offset %x", opcode,
+            // printf("                      type %02x: start at char offset %x", opcode,
             // currentBytes);
           }
           else if(opcode == AdvanceBytes)
@@ -2101,9 +2105,9 @@ SPDBChunk::SPDBChunk(void *chunk)
           //printf("     in %s (%x) flags??=%04x, %s:", funcName.c_str(), var->func,
           var->unkflags, var->name);
 
-          byte *afterName = (byte *)var->name + (strlen(var->name) + 1);
+          char *afterName = (char *)var->name + (strlen(var->name) + 1);
 
-          byte *end = contents + len;
+          char *end = contents + len;
 
           // seems to always be 0s
           while(afterName < end)
@@ -2193,9 +2197,9 @@ SPDBChunk::SPDBChunk(void *chunk)
       {
         uint32_t *len = (uint32_t *)(type + 2);
 
-        cur = (byte *)(len + 1);
+        cur = (char *)(len + 1);
 
-        byte *start = cur;
+        char *start = cur;
         while(cur < start + *len)
         {
           uint32_t *hashData = (uint32_t *)cur;
@@ -2203,14 +2207,14 @@ SPDBChunk::SPDBChunk(void *chunk)
           uint16_t *unknown = (uint16_t *)cur;
           cur += sizeof(uint16_t);
 
-          uint32_t chunkOffs = uint32_t((byte *)hashData - start);
+          uint32_t chunkOffs = uint32_t((char *)hashData - start);
 
           uint32_t nameoffset = hashData[0];
 
           // if this is 0, we don't have a hash
           if(*unknown)
           {
-            byte hash[16];
+            char hash[16];
             memcpy(hash, cur, sizeof(hash));
             cur += sizeof(hash);
 
@@ -2262,20 +2266,20 @@ SPDBChunk::SPDBChunk(void *chunk)
       {
         uint32_t *len = (uint32_t *)(type + 2);
 
-        cur = (byte *)(len + 1);
+        cur = (char *)(len + 1);
 
-        byte *start = cur;
+        char *start = cur;
 
         LineNumbersHeader *hdr = (LineNumbersHeader *)cur;
 
-        cur = (byte *)(hdr + 1);
+        cur = (char *)(hdr + 1);
 
         bool hasExtra = (hdr->flags & 0x1);
 
         while(cur < start + *len)
         {
           FileLineNumbers *file = (FileLineNumbers *)cur;
-          cur = (byte *)(file + 1);
+          cur = (char *)(file + 1);
 
           uint32_t *linedata = (uint32_t *)cur;
 
@@ -2320,7 +2324,7 @@ SPDBChunk::SPDBChunk(void *chunk)
             extraData += 2;
           }
 
-          assert((byte *)extraData == cur);
+          assert((char *)extraData == cur);
         }
         assert(cur == start + *len);
       }
@@ -2328,7 +2332,7 @@ SPDBChunk::SPDBChunk(void *chunk)
       {
         uint32_t *len = (uint32_t *)(type + 2);
 
-        cur = (byte *)(len + 1);
+        cur = (char *)(len + 1);
 
         uint32_t *calls = (uint32_t *)cur;
         uint32_t *callsend = (uint32_t *)(cur + *len);

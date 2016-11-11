@@ -43,7 +43,7 @@ public:
   {
     unsigned long shift = 0;
     unsigned long mask = M;
-    byte hasBit = _BitScanForward(&shift, mask);
+    char hasBit = _BitScanForward(&shift, mask);
     assert(hasBit != 0);
 
     T ret = (T)((token & mask) >> shift);
@@ -61,7 +61,7 @@ public:
   {
     unsigned long shift = 0;
     unsigned long mask = M;
-    byte hasBit = _BitScanForward(&shift, mask);
+    char hasBit = _BitScanForward(&shift, mask);
     assert(hasBit != 0);
 
     bool ret = ((token & mask) >> shift) != 0;
@@ -842,7 +842,7 @@ bool DXBCFile::ExtractOperand(uint32_t *&tokenStream, ASMOperand &retOper)
       retOper.indices[idx].index |= tokenStream[0];
       tokenStream++;
 
-      static_assert(sizeof(retOper.indices[idx].index) == 8, "Index is the wrong byte width");
+      static_assert(sizeof(retOper.indices[idx].index) == 8, "Index is the wrong char width");
     }
 
     if(rep[idx] == INDEX_IMMEDIATE64_PLUS_RELATIVE || rep[idx] == INDEX_IMMEDIATE32_PLUS_RELATIVE ||

@@ -32,12 +32,12 @@
 #include "replay_enums.h"
 #include "dxbc_disassemble.h"
 
-typedef unsigned char uint8_t;
-typedef int int8_t;
-typedef unsigned short uint16_t;
-typedef short int16_t;
-typedef unsigned int uint32_t;
-typedef int int32_t;
+// typedef unsigned char uint8_t;
+// typedef int int8_t;
+// typedef unsigned short uint16_t;
+// typedef short int16_t;
+// typedef unsigned int uint32_t;
+// typedef int int32_t;
 
 #define MAKE_FOURCC(a, b, c, d) \
   (((uint32_t)(d) << 24) | ((uint32_t)(c) << 16) | ((uint32_t)(b) << 8) | (uint32_t)(a))
@@ -342,7 +342,7 @@ class DXBCFile
 {
 public:
   DXBCFile(const void *ByteCode, size_t ByteCodeLength);
-  ~DXBCFile() { SAFE_DELETE(m_DebugInfo); }
+  ~DXBCFile() { delete m_DebugInfo; }
   D3D11_ShaderType m_Type;
   struct
   {
@@ -370,7 +370,7 @@ public:
 
   vector<uint32_t> m_HexDump;
 
-  vector<byte> m_ShaderBlob;
+  vector<char> m_ShaderBlob;
 
   const string &GetDisassembly()
   {

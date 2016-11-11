@@ -81,7 +81,7 @@ public:
 
   struct
   {
-    vector<byte> data;
+    vector<char> data;
     uint32_t firstElement;
     uint32_t numElements;
 
@@ -95,7 +95,7 @@ public:
 
   struct
   {
-    vector<byte> data;
+    vector<char> data;
     uint32_t firstElement;
     uint32_t numElements;
 
@@ -108,7 +108,7 @@ public:
     uint32_t bytestride;
     uint32_t count;    // of structures (above stride), or uint32s (raw)
 
-    vector<byte> data;
+    vector<char> data;
   };
 
   vector<groupsharedMem> groupshared;
