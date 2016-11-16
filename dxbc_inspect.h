@@ -29,6 +29,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "shader_types.h"
 #include "replay_enums.h"
 #include "dxbc_disassemble.h"
 
@@ -362,9 +363,9 @@ public:
 
   map<string, CBufferVariableType> m_ResourceBinds;
 
-//   vector<SigParameter> m_InputSig;
-//   vector<SigParameter> m_OutputSig;
-//   vector<SigParameter> m_PatchConstantSig;
+  vector<SigParameter> m_InputSig;
+  vector<SigParameter> m_OutputSig;
+  vector<SigParameter> m_PatchConstantSig;
 
   uint32_t DispatchThreadsDimension[3];
 

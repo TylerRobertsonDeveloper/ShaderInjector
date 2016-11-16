@@ -689,7 +689,7 @@ DXBCFile::DXBCFile(const void *ByteCode, size_t ByteCodeLength)
 
             for(uint32_t a = 0; a < arraySize; a++)
             {
-              desc.name = sprintf( buffer, "%s[%u]", rname.c_str(), a);
+              desc.name = sprintf_s( buffer, sizeof(buffer),"%s[%u]", rname.c_str(), a);
               m_Resources.push_back(desc);
               desc.reg++;
             }
@@ -1006,7 +1006,7 @@ DXBCFile::DXBCFile(const void *ByteCode, size_t ByteCodeLength)
 		if (a.needSemanticIndex)
 		{
 			char buff[32];
-			sprintf(buff, "%d", a.semanticIdxName);
+			sprintf_s(buff, sizeof(buff), "%s", a.semanticIdxName.c_str());
 			semanticIdxName += string(buff);
 		}
 
@@ -1378,7 +1378,7 @@ SDBGChunk::SDBGChunk(void *data)
   m_HasDebugInfo = false;
 
   m_ShaderFlags = 0;
-  RDCEraseEl(m_Header);
+//  RDCEraseEl(m_Header);
 
   {
     uint32_t *raw = (uint32_t *)data;
@@ -2383,7 +2383,7 @@ SPDBChunk::SPDBChunk(void *chunk)
 
     if(funcCalls[i].locations.empty() || funcCalls[i].locations.size() == 1)
     {
-      printf("Skipping patching function call with %d locations", funcCalls[i].locations.size());
+      printf("Skipping patching function call with %d locations", (int)funcCalls[i].locations.size());
       continue;
     }
 
